@@ -17,12 +17,10 @@ class CardGameEnv(py_environment.PyEnvironment):
     self._action_spec = array_spec.BoundedArraySpec(
         shape=(), dtype=np.int32, minimum=0, maximum=2, name='action')
     self._observation_spec = array_spec.BoundedArraySpec(
-        shape=(1,26), dtype=np.float32, minimum=[-20.0,-20.0,-20.0,-20.0,-20,-20.0,-20.0,-20.0,-20.0,-20,
-                                                -20.0,-20.0,-20.0,-20.0,-20,-20.0,-20.0,-20.0,-20.0,-20,
-                                                -20.0,-20.0,-20.0,-20.0,-20,-20], 
-                                        maximum=[20.0,20.0,20.0,20.0,20,20.0,20.0,20.0,20.0,20,
-                                                 20.0,20.0,20.0,20.0,20,20.0,20.0,20.0,20.0,20,
-                                                 20.0,20.0,20.0,20.0,20,20], name='observation')
+        shape=(1,12), dtype=np.float32, minimum=[-20.0,-20.0,-20.0,-20.0,-20.0,-20.0,-20.0,-20.0,-20.0,-20.0,
+                                                -20.0,-20.0], 
+                                        maximum=[20.0,20.0,20.0,20.0,20.0,20.0,20.0,20.0,20.0,20.0,
+                                                 20.0,20.0], name='observation')
     
     self._episode_ended = False
     self.base = base
@@ -70,7 +68,7 @@ class CardGameEnv(py_environment.PyEnvironment):
         self.metal = True
     if self.metal and (comprado == False and vendido == False):
         self.metal = False
-        self._episode_ended = True
+        # self._episode_ended = True
         
     # print('dentro da classe-----------------------')
     # print('cont :',self.cont)
@@ -83,18 +81,9 @@ class CardGameEnv(py_environment.PyEnvironment):
     # print('episodio: ',self._episode_ended )
     # print('-------------------------------------')
     
-    # self._state = self.dados2.values[self.cont].tolist()
     self.state = self.dados2.values[self.cont].tolist()
     self.cont += 1
-    # if action == 1:
-    #   self._episode_ended = True
-    # elif action == 0:
-    #   new_card = np.random.randint(1, 11)
-    #   self._state += new_card
-    # else:
-    #     new_card = np.random.randint(1, 11)
-    #     self._state += new_card
-        
+
     
       # raise ValueError('`action` should be 0 or 1.')
     reward = recompensa
@@ -108,17 +97,15 @@ class CardGameEnv(py_environment.PyEnvironment):
       # print('epsodio',reward,0.0)
       # print('acao: ',action)
       return ts.transition(
-          np.array([self._state], dtype=np.float32), reward=0.0, discount=1.0)
+          np.array([self._state], dtype=np.float32), reward=reward, discount=1.0)
   #-----------------------------------------------------------------
   def tratamento(self,base,fim):
     print('****************************')
     print('tratamento: ',self.cont)
     print('****************************')
-    colunas = ['Hora','dif', 'retracao +','retracao -', 'RSI',
+    colunas = ['Hora','dif', 'retacao +','retracao -', 'RSI',
                  'M22M44', 'M22M66', 'M66M44', 'ADX', 'ATR',
-                'Momentum', 'Force', 'OBV', 'VOL', 'CCI', 'Bears', 'Bulls', 'Stock1',
-                'Stock2', 'Wilians', 'Std', 'Acumulacao', 'MFI', 'band1', 'band2',
-                'band3']
+                'Momentum', 'Force']
     
     colunas1 = ['Hora', 'open', 'high', 'low', 'close']
     dados1 = pd.DataFrame(data=base[0:540].values,columns=base.columns)      
@@ -134,4 +121,4 @@ class CardGameEnv(py_environment.PyEnvironment):
     train_std = dados2.std(axis=0)
     dados2 = (dados2 - train_mean) / train_std
     return dados1,dados2
-      
+        

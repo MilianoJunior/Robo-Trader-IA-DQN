@@ -10,11 +10,11 @@ from __future__ import division
 from __future__ import print_function
 
 import base64
-import imageio
+# import imageio
 import IPython
 import matplotlib
 import matplotlib.pyplot as plt
-import PIL.Image
+# import PIL.Image
 
 import pandas as pd
 import chardet
@@ -22,7 +22,7 @@ import tensorflow as tf
 
 from tf_agents.agents.categorical_dqn import categorical_dqn_agent
 from tf_agents.drivers import dynamic_step_driver
-from tf_agents.environments import suite_gym
+from tf_agents.policies import policy_saver
 from tf_agents.environments import tf_py_environment
 from tf_agents.eval import metric_utils
 from tf_agents.metrics import tf_metrics
@@ -37,10 +37,10 @@ from CardTrader import CardGameEnv
 
 " 1 passo: importar os dados"
 try:
-    with open('M2.csv', 'rb') as f:
+    with open('M3.csv', 'rb') as f:
         result = chardet.detect(f.read())  # or readline if the file is large
     
-    base = pd.read_csv('M2.csv', encoding=result['encoding'])
+    base = pd.read_csv('M3.csv', encoding=result['encoding'])
     
 except:
     print('Erro, é preciso fazer o download dos dados OHLC em csv')
@@ -64,7 +64,7 @@ log_interval = 200  # @param {type:"integer"}
 num_atoms = 51  # @param {type:"integer"}
 min_q_value = -200  # @param {type:"integer"}
 max_q_value = 200  # @param {type:"integer"}
-n_step_update = 2  # @param {type:"integer"}
+n_step_update = 20  # @param {type:"integer"}
 
 num_eval_episodes = 100  # @param {type:"integer"}
 eval_interval = 100  # @param {type:"integer"}
@@ -116,6 +116,9 @@ def compute_avg_return(environment, policy, num_episodes=10):
     episode_return = 0.0
 
     while not time_step.is_last():
+      # print('-----------------------')
+      # print('formato',time_step)
+      # print('-----------------------')
       action_step = policy.action(time_step)
       time_step = environment.step(action_step.action)
       episode_return += time_step.reward
@@ -214,7 +217,12 @@ plt.xlabel('Step')
 # plt.ylim(top=550)
 
 # my_policy = agent.collect_policy
-# saver = PolicySaver(my_policy, batch_size=None)
+# saver = policy_saver.PolicySaver(my_policy, batch_size=None)
 # saver.save('policy')
 
+# saved_policy = tf.compat.v2.saved_model.load('policy')
 
+
+
+# time_step = clsTimeStep(step_type=<tf.Tensor: shape=(1,), dtype=int32, numpy=array([1])>, reward=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([205.], dtype=float32)>, discount=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([1.], dtype=float32)>, observation=<tf.Tensor: shape=(1, 1, 12), dtype=float32, numpy=array([[[-1.5582745 ,  0.04436944, -0.03576077,  0.17340377,1.9134734 ,  1.1723746 ,  1.220293  , -1.2793022 ,0.5362163 , -0.14996691,  0.33079696,  0.27592728]]],dtype=float32)>)
+# observation=<tf.Tensor: shape=(1, 1, 12), dtype=float32, 
