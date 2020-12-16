@@ -47,12 +47,15 @@ except:
 
 #configuracoes iniciais - Hiperparametros
 tf.compat.v1.enable_v2_behavior()
-env_name = "CartPole-v1" # @param {type:"string"}
-num_iterations = 150# @param {type:"integer"}
 
-initial_collect_steps = 1000  # @param {type:"integer"} 
-collect_steps_per_iteration = 1  # @param {type:"integer"}
-replay_buffer_capacity = 100000  # @param {type:"integer"}
+num_iterations = 1000# @param {type:"integer"}
+
+# variavel que faz coleta de dados
+initial_collect_steps = 600  # @param {type:"integer"} 
+# faz interações aleatorias para explorar
+collect_steps_per_iteration = 500  # @param {type:"integer"}
+# memoria de dados
+replay_buffer_capacity = 1000000  # @param {type:"integer"}
 
 fc_layer_params = (100,)
 
@@ -62,11 +65,11 @@ gamma = 0.99
 log_interval = 200  # @param {type:"integer"}
 
 num_atoms = 51  # @param {type:"integer"}
-min_q_value = -200  # @param {type:"integer"}
-max_q_value = 200  # @param {type:"integer"}
-n_step_update = 20  # @param {type:"integer"}
+min_q_value = -500  # @param {type:"integer"}
+max_q_value = 500  # @param {type:"integer"}
+n_step_update = 2  # @param {type:"integer"}
 
-num_eval_episodes = 100  # @param {type:"integer"}
+num_eval_episodes = 10  # @param {type:"integer"}
 eval_interval = 100  # @param {type:"integer"}
 
 #Meio ambiente
@@ -77,16 +80,12 @@ eval_py_env = CardGameEnv(base,num_iterations)
 train_env = tf_py_environment.TFPyEnvironment(train_py_env)
 eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
 
-# train_env = tf_py_environment.TFPyEnvironment(env_train)
-# eval_env = tf_py_environment.TFPyEnvironment(env_eval)
-# #Agente
 
 categorical_q_net = categorical_q_network.CategoricalQNetwork(
     train_env.observation_spec(),
     train_env.action_spec(),
     num_atoms=num_atoms,
     fc_layer_params=fc_layer_params)
-
 
 
 optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
@@ -106,35 +105,33 @@ agent = categorical_dqn_agent.CategoricalDqnAgent(
     train_step_counter=train_step_counter)
 agent.initialize()
 
+
     
 def compute_avg_return(environment, policy, num_episodes=10):
 
   total_return = 0.0
   for _ in range(num_episodes):
     time_step = environment.reset()
-
+    # print(time_step)
     episode_return = 0.0
 
     while not time_step.is_last():
-      # print('-----------------------')
-      # print('formato',time_step)
-      # print('-----------------------')
       action_step = policy.action(time_step)
       time_step = environment.step(action_step.action)
       episode_return += time_step.reward
     total_return += episode_return
 
   avg_return = total_return / num_episodes
-  # print('       ')
-  # print(' media de retorno : ',avg_return)
-  # print('       ')
+
   return avg_return.numpy()[0]
 
 
 random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),
                                                 train_env.action_spec())
 
-compute_avg_return(eval_env, random_policy, num_eval_episodes)
+teste = compute_avg_return(eval_env, random_policy, num_eval_episodes)
+# teste = compute_avg_return(eval_env, random_policy, 1)
+print(teste)
 
 # Please also see the metrics module for standard implementations of different
 # metrics.
@@ -155,6 +152,7 @@ def collect_step(environment, policy):
   # Add trajectory to the replay buffer
   replay_buffer.add_batch(traj)
 
+#armazenar dados no buffer
 for _ in range(initial_collect_steps):
   collect_step(train_env, random_policy)
 
@@ -187,7 +185,8 @@ agent.train_step_counter.assign(0)
 # Evaluate the agent's policy once before training.
 avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
 returns = [avg_return]
-
+print(avg_return)
+# quantidade de vezes que havera treinameto
 for _ in range(num_iterations):
 
   # Collect a few steps using collect_policy and save to the replay buffer.
@@ -224,5 +223,50 @@ plt.xlabel('Step')
 
 
 
-# time_step = clsTimeStep(step_type=<tf.Tensor: shape=(1,), dtype=int32, numpy=array([1])>, reward=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([205.], dtype=float32)>, discount=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([1.], dtype=float32)>, observation=<tf.Tensor: shape=(1, 1, 12), dtype=float32, numpy=array([[[-1.5582745 ,  0.04436944, -0.03576077,  0.17340377,1.9134734 ,  1.1723746 ,  1.220293  , -1.2793022 ,0.5362163 , -0.14996691,  0.33079696,  0.27592728]]],dtype=float32)>)
-# observation=<tf.Tensor: shape=(1, 1, 12), dtype=float32, 
+from Trade import Trade
+from tf_agents.trajectories import time_step as ts
+
+trader = Trade()
+
+colunas = ['Hora','dif', 'retacao +','retracao -', 'RSI',
+             'M22M44', 'M22M66', 'M66M44', 'ADX', 'ATR',
+            'Momentum', 'Force']
+
+colunas1 = ['Hora', 'open', 'high', 'low', 'close']
+dados1 = pd.DataFrame(data=base[-565:-530].values,columns=base.columns)      
+dados2 = pd.DataFrame(data=base[-565:-530].values,columns=base.columns)
+dados1 = dados1[colunas1]
+dados2 = dados2[colunas]
+index = 0
+for i in dados2.values:
+    base1 = i[0].split(':')
+    dados2.at[index, 'Hora'] = float(base1[0])*100 + float(base1[1])
+    index += 1
+train_mean = dados2.mean(axis=0)
+train_std = dados2.std(axis=0)
+dados2 = (dados2 - train_mean) / train_std
+
+
+import random
+stop = -500
+gain = 500
+trader.reset()
+for i in range(len(dados1)):
+    action = action2.action.numpy()[0]
+    compra,venda,neg,ficha,comprado,vendido,recompensa= trader.agente(dados1.values[i],action,stop,gain,0)
+    # print('estado: ',dados2.values[i])
+    observations = tf.constant([[dados2.values[i]]])
+    time_step = ts.restart(observations,1)
+    action2 = saved_policy.action(time_step)
+    time_step = ts.transition(observations,1)
+    action2 = agent.policy.action(time_step)
+    
+    print('------------------')
+    print('acao: ',action)
+    print('comprado: ',comprado)
+    print('vendido: ',vendido)
+    print('recompensa: ',recompensa)
+    
+    print('recompensa: ',time_step.reward.numpy(),' action: ',action2.action.numpy()[0])
+
+print(sum(neg.ganhofinal))

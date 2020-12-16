@@ -6,9 +6,22 @@ Robo para daytrade no win da bovespa.
 
 Neste caso, o ambiente é a bolsa de valores brasileira, os estados são os dados OHLC retirados do time-frame de 1 min dos ultimos 6 anos, as ações são operações de compra, venda e obsevação.O agente é uma rede neural que busca otimizar a politica. E por fim, as recompensas são os retornos das operações em pontos. Esse robô utiliza técnicas de aprendizado por reforço com tf-agents, após o treinamento é criado uma rede socket para receber e enviar dados com a plataforma Metatrader.
 
+#### Etapas de testes para encontrar o melhor resultado
+
+Separa��o dos dados em pacotes, o primeiro pacote ser� limitado no dia 11/12/2020.
+
+
+
+
+
+
 Código em:
 
   * Tensor-flow
   * Tf-agents
   * Python
   * Mql5
+
+
+
+

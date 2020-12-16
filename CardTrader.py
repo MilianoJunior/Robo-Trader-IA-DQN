@@ -26,6 +26,7 @@ class CardGameEnv(py_environment.PyEnvironment):
     self.base = base
     self.cont = 0
     self.fim = fim
+    self.contador = 0
     self.metal = False
     self.dados1,self.dados2 = self.tratamento(base,fim)
     self.trader = Trade()
@@ -57,9 +58,10 @@ class CardGameEnv(py_environment.PyEnvironment):
     # Make sure episodes don't go on forever.
     stop = -500
     gain = 500
-    # if self.cont % 538 == 0:
-    #     self._episode_ended = True
-    if (538) < self.cont:
+    if len(self.dados1) <= self.cont:
+        self.contador +=1
+        self.trader.reset()
+        print('contador: ',self.contador)
         self._episode_ended = True
         self.cont = 0
     # dados1,dados2 = self.tratamento(self.base)
@@ -76,8 +78,8 @@ class CardGameEnv(py_environment.PyEnvironment):
     # print('comprado: ',comprado)
     # print('vendido: ',vendido)
     # print('recompensa: ',recompensa)
-    # print('dados1: ',self.dados1.values[self.cont]) #68084.0
-    # print('dados1: ',self.dados2.values[self.cont])
+    # # print('dados1: ',self.dados1.values[self.cont][0]) #68084.0
+    # # print('dados1: ',self.dados2.values[self.cont])
     # print('episodio: ',self._episode_ended )
     # print('-------------------------------------')
     
@@ -88,14 +90,9 @@ class CardGameEnv(py_environment.PyEnvironment):
       # raise ValueError('`action` should be 0 or 1.')
     reward = recompensa
     if self._episode_ended:
-      # print(' final epsodio',reward)
-      # print('acao: ',action)
-      # if self.cont > 20:
-      #     raise ValueError('`action` should be 0 or 1.')
+      self.trader.reset()
       return ts.termination(np.array([self._state], dtype=np.float32), reward)
     else:
-      # print('epsodio',reward,0.0)
-      # print('acao: ',action)
       return ts.transition(
           np.array([self._state], dtype=np.float32), reward=reward, discount=1.0)
   #-----------------------------------------------------------------
@@ -108,8 +105,8 @@ class CardGameEnv(py_environment.PyEnvironment):
                 'Momentum', 'Force']
     
     colunas1 = ['Hora', 'open', 'high', 'low', 'close']
-    dados1 = pd.DataFrame(data=base[0:540].values,columns=base.columns)      
-    dados2 = pd.DataFrame(data=base[0:540].values,columns=base.columns)
+    dados1 = pd.DataFrame(data=base[-565:-530].values,columns=base.columns)      
+    dados2 = pd.DataFrame(data=base[-565:-530].values,columns=base.columns)
     dados1 = dados1[colunas1]
     dados2 = dados2[colunas]
     index = 0
