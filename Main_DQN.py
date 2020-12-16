@@ -48,14 +48,14 @@ except:
 #configuracoes iniciais - Hiperparametros
 tf.compat.v1.enable_v2_behavior()
 
-num_iterations = 1000# @param {type:"integer"}
+num_iterations = 15000# @param {type:"integer"}
 
 # variavel que faz coleta de dados
-initial_collect_steps = 600  # @param {type:"integer"} 
+initial_collect_steps = 10000  # @param {type:"integer"} 
 # faz interações aleatorias para explorar
-collect_steps_per_iteration = 500  # @param {type:"integer"}
+collect_steps_per_iteration = 1  # @param {type:"integer"}
 # memoria de dados
-replay_buffer_capacity = 1000000  # @param {type:"integer"}
+replay_buffer_capacity = 100000  # @param {type:"integer"}
 
 fc_layer_params = (100,)
 
@@ -65,11 +65,11 @@ gamma = 0.99
 log_interval = 200  # @param {type:"integer"}
 
 num_atoms = 51  # @param {type:"integer"}
-min_q_value = -500  # @param {type:"integer"}
-max_q_value = 500  # @param {type:"integer"}
+min_q_value = -50  # @param {type:"integer"}
+max_q_value = 50  # @param {type:"integer"}
 n_step_update = 2  # @param {type:"integer"}
 
-num_eval_episodes = 10  # @param {type:"integer"}
+num_eval_episodes = 1  # @param {type:"integer"}
 eval_interval = 100  # @param {type:"integer"}
 
 #Meio ambiente
@@ -233,8 +233,8 @@ colunas = ['Hora','dif', 'retacao +','retracao -', 'RSI',
             'Momentum', 'Force']
 
 colunas1 = ['Hora', 'open', 'high', 'low', 'close']
-dados1 = pd.DataFrame(data=base[-565:-530].values,columns=base.columns)      
-dados2 = pd.DataFrame(data=base[-565:-530].values,columns=base.columns)
+dados1 = pd.DataFrame(data=base[-565:-1].values,columns=base.columns)      
+dados2 = pd.DataFrame(data=base[-565:-1].values,columns=base.columns)
 dados1 = dados1[colunas1]
 dados2 = dados2[colunas]
 index = 0
@@ -251,15 +251,17 @@ import random
 stop = -500
 gain = 500
 trader.reset()
+action = 0
 for i in range(len(dados1)):
-    action = action2.action.numpy()[0]
+    
     compra,venda,neg,ficha,comprado,vendido,recompensa= trader.agente(dados1.values[i],action,stop,gain,0)
     # print('estado: ',dados2.values[i])
     observations = tf.constant([[dados2.values[i]]])
-    time_step = ts.restart(observations,1)
-    action2 = saved_policy.action(time_step)
+    # time_step = ts.restart(observations,1)
+    # action2 = saved_policy.action(time_step)
     time_step = ts.transition(observations,1)
     action2 = agent.policy.action(time_step)
+    action = action2.action.numpy()[0]
     
     print('------------------')
     print('acao: ',action)
@@ -270,3 +272,7 @@ for i in range(len(dados1)):
     print('recompensa: ',time_step.reward.numpy(),' action: ',action2.action.numpy()[0])
 
 print(sum(neg.ganhofinal))
+
+# 2162.0
+# variavel que faz coleta de dados
+# initial_collect_steps = 10000  # @param {type:"integer"} 
