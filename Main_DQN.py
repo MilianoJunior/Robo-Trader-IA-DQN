@@ -64,7 +64,7 @@ log_interval = 200  # @param {type:"integer"}
 num_atoms = 51  # @param {type:"integer"}
 min_q_value = -200  # @param {type:"integer"}
 max_q_value = 200  # @param {type:"integer"}
-n_step_update = 2  # @param {type:"integer"}
+n_step_update = 20  # @param {type:"integer"}
 
 num_eval_episodes = 100  # @param {type:"integer"}
 eval_interval = 100  # @param {type:"integer"}
@@ -218,19 +218,13 @@ plt.ylabel('Average Return')
 plt.xlabel('Step')
 # plt.ylim(top=550)
 
-my_policy = agent.collect_policy
-saver = policy_saver.PolicySaver(my_policy, batch_size=None)
-saver.save('policy')
+# my_policy = agent.collect_policy
+# saver = policy_saver.PolicySaver(my_policy, batch_size=None)
+# saver.save('policy')
 
-saved_policy = tf.compat.v2.saved_model.load('policy')
+# saved_policy = tf.compat.v2.saved_model.load('policy')
 
-import numpy as np
-dados = np.array([[[-1.5582745 ,  0.04436944, -0.03576077,  0.17340377,1.9134734 ,  
-                    1.1723746 ,  1.220293  , -1.2793022 ,0.5362163 , -0.14996691, 
-                    0.33079696,  0.27592728]]])
 
-initial_state = tf.constant(dados, name='time_step/observation',dtype=tf.float32)
 
 # time_step = clsTimeStep(step_type=<tf.Tensor: shape=(1,), dtype=int32, numpy=array([1])>, reward=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([205.], dtype=float32)>, discount=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([1.], dtype=float32)>, observation=<tf.Tensor: shape=(1, 1, 12), dtype=float32, numpy=array([[[-1.5582745 ,  0.04436944, -0.03576077,  0.17340377,1.9134734 ,  1.1723746 ,  1.220293  , -1.2793022 ,0.5362163 , -0.14996691,  0.33079696,  0.27592728]]],dtype=float32)>)
 # observation=<tf.Tensor: shape=(1, 1, 12), dtype=float32, 
-action_step = saved_policy.action(initial_state)
