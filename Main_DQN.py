@@ -72,9 +72,7 @@ eval_interval = 100  # @param {type:"integer"}
 #Meio ambiente
 train_py_env = CardGameEnv(base,num_iterations)
 eval_py_env = CardGameEnv(base,num_iterations)
-# environment = tf_py_environment.TFPyEnvironment(env_train)
-# train_py_env = suite_gym.load(env_name)
-# eval_py_env = suite_gym.load(env_name)
+
 
 train_env = tf_py_environment.TFPyEnvironment(train_py_env)
 eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
