@@ -61,7 +61,7 @@ class CardGameEnv(py_environment.PyEnvironment):
     if len(self.dados1)-5 <= self.cont:
         self.contador +=1
         self.trader.reset()
-        # print('contador: ',self.contador)
+        print('contador: ',self.contador)
         self._episode_ended = True
         self.cont = 0
     # dados1,dados2 = self.tratamento(self.base)
@@ -105,8 +105,8 @@ class CardGameEnv(py_environment.PyEnvironment):
                 'Momentum', 'Force']
     
     colunas1 = ['Hora', 'open', 'high', 'low', 'close']
-    dados1 = pd.DataFrame(data=base[-565:-1].values,columns=base.columns)      
-    dados2 = pd.DataFrame(data=base[-565:-1].values,columns=base.columns)
+    dados1 = pd.DataFrame(data=base[-50000:-1].values,columns=base.columns)      
+    dados2 = pd.DataFrame(data=base[-50000:-1].values,columns=base.columns)
     dados1 = dados1[colunas1]
     dados2 = dados2[colunas]
     index = 0

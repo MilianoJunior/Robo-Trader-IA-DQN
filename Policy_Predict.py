@@ -10,60 +10,72 @@ from __future__ import print_function
 
 import abc
 import tensorflow as tf
-import tensorflow_probability as tfp
+# import tensorflow_probability as tfp
 import numpy as np
 
-from tf_agents.specs import array_spec
-from tf_agents.specs import tensor_spec
-from tf_agents.networks import network
+# from tf_agents.specs import array_spec
+# from tf_agents.specs import tensor_spec
+# from tf_agents.networks import network
 
-from tf_agents.policies import py_policy
-from tf_agents.policies import random_py_policy
-from tf_agents.policies import scripted_py_policy
+# from tf_agents.policies import py_policy
+# from tf_agents.policies import random_py_policy
+# from tf_agents.policies import scripted_py_policy
 
-from tf_agents.policies import tf_policy
-from tf_agents.policies import random_tf_policy
-from tf_agents.policies import actor_policy
-from tf_agents.policies import q_policy
-from tf_agents.policies import greedy_policy
+# from tf_agents.policies import tf_policy
+# from tf_agents.policies import random_tf_policy
+# from tf_agents.policies import actor_policy
+# from tf_agents.policies import q_policy
+# from tf_agents.policies import greedy_policy
 
 from tf_agents.trajectories import time_step as ts
 # import pandas as pd
 # import chardet
 # import tensorflow as tf
-import numpy as np
+# import numpy as np
+from comunica import  Comunica
 tf.compat.v1.enable_v2_behavior()
 
+media = np.array([ 1.35001064e+03,  1.41843972e+00,  2.31737589e+01,  2.06737589e+01,
+        5.08349468e+01,  2.21695035e+00,  5.41413121e+00, -3.19700355e+00,
+        2.94372695e+01,  8.52759752e+01,  1.00001117e+02,  8.17068867e+03])
 
-c1 = [919.0,60,55,0,69.58,115.43,179.51,-64.08,31.38,94.29,100.25,1185.0]
+std = np.array([2.71505290e+02, 5.30217498e+01, 1.87897109e+01, 1.64847727e+01,
+       1.14770442e+01, 6.58121769e+01, 1.10372975e+02, 4.77192814e+01,
+       1.00903737e+01, 1.98468576e+01, 1.93246528e-01, 1.38057677e+05])
 
-c2 = [-1.5621375506983564,1.0170146957413337,1.151379423051654,
- -0.8240188550530413, 1.9436058065119814, 1.15459996673134,
- 1.1976462984199698, -1.248256181130577, 0.226830428685124,
- -0.050548391458088315, 0.5699084640448159, 0.2824263833205345]
-
-c3 = [920.0 ,0 ,25 ,25 ,69.22, 117.95, 184.43, -66.48, 34.76, 88.93, 100.08, 1085.0]
-
-c4 = [-1.5582745566819385, 0.04436943504060721, -0.03576076619457791,
- 0.17340377053792586, 1.9134733684408487, 1.172374662245547,
- 1.2202930019443057, -1.2793022587790714, 0.5362163052449721,
- -0.1499669030651435 ,0.33079696039159334, 0.27592727727991867]
-
-c5 =[921.0, 30 ,15 ,0 ,70.05, 120.76, 189.74, -68.98, 38.44, 77.5, 100.23, 576.92]
-
-c6 =[-1.5544115626655208, 0.5306920653909704 ,-0.43147416260998855,
- -0.8240188550530413, 1.9829453784381823, 1.192194858434008,
- 1.2447348709919124, -1.3116419229962533, 0.8730624667065819,
- -0.3619731694212333, 0.5417776989091485, 0.24290661930875776]
-
-
-batch_size = 3
+# batch_size = 3
 saved_policy = tf.saved_model.load('policy')
-policy_state = saved_policy.get_initial_state(batch_size=batch_size)
+# policy_state = saved_policy.get_initial_state(batch_size=batch_size)
 
-observations = tf.constant([[c2]])
-print(observations)
-time_step = ts.restart(observations,1)
-print(time_step)
-action2 = saved_policy.action(time_step)
-print('recompensa: ',time_step.reward.numpy()[0],' action: ',action2.action.numpy()[0])
+HOST = ''    # Host
+PORT = 8888  # Porta
+R = Comunica(HOST,PORT)
+s = R.createServer()
+
+while True:
+    p,addr = R.runServer(s)
+    jm = np.array((p-media)/std)
+    jm = np.array(jm, dtype=np.float32)
+    observations = tf.constant([[jm]])
+    # print(observations)
+    time_step = ts.restart(observations,1)
+    # print(time_step)
+    action = saved_policy.action(time_step)
+    previsao2 = action.action.numpy()[0]
+    d3 = p[0]
+    print('recebido: ',p[0])
+    print('previsao: ',previsao2)
+    if previsao2 == 0:
+        print('Sem operacao')
+    if previsao2 == 1:
+        flag = "compra-{}".format(d3)
+        # flag ="compra"
+        print('compra: ',previsao2)
+        R.enviaDados(flag,s,addr)
+    if previsao2 == 2:
+        flag = "venda-{}".format(d3)
+        # flag = "venda"
+        print('venda: ',previsao2)
+        R.enviaDados(flag,s,addr)
+
+

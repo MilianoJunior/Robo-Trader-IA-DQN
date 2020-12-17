@@ -57,7 +57,7 @@ collect_steps_per_iteration = 1  # @param {type:"integer"}
 # memoria de dados
 replay_buffer_capacity = 100000  # @param {type:"integer"}
 
-fc_layer_params = (100,)
+fc_layer_params = (500,)
 
 batch_size = 64  # @param {type:"integer"}
 learning_rate = 1e-3  # @param {type:"number"}
@@ -65,8 +65,8 @@ gamma = 0.99
 log_interval = 200  # @param {type:"integer"}
 
 num_atoms = 51  # @param {type:"integer"}
-min_q_value = -50  # @param {type:"integer"}
-max_q_value = 50  # @param {type:"integer"}
+min_q_value = -1000  # @param {type:"integer"}
+max_q_value = 1000  # @param {type:"integer"}
 n_step_update = 2  # @param {type:"integer"}
 
 num_eval_episodes = 1  # @param {type:"integer"}
@@ -215,11 +215,11 @@ plt.ylabel('Average Return')
 plt.xlabel('Step')
 # plt.ylim(top=550)
 
-# my_policy = agent.collect_policy
-# saver = policy_saver.PolicySaver(my_policy, batch_size=None)
-# saver.save('policy')
+my_policy = agent.collect_policy
+saver = policy_saver.PolicySaver(my_policy, batch_size=None)
+saver.save('policy2')
 
-# saved_policy = tf.compat.v2.saved_model.load('policy')
+saved_policy = tf.compat.v2.saved_model.load('policy2')
 
 
 
@@ -233,8 +233,8 @@ colunas = ['Hora','dif', 'retacao +','retracao -', 'RSI',
             'Momentum', 'Force']
 
 colunas1 = ['Hora', 'open', 'high', 'low', 'close']
-dados1 = pd.DataFrame(data=base[-565:-1].values,columns=base.columns)      
-dados2 = pd.DataFrame(data=base[-565:-1].values,columns=base.columns)
+dados1 = pd.DataFrame(data=base[-50000:-1].values,columns=base.columns)      
+dados2 = pd.DataFrame(data=base[-50000:-1].values,columns=base.columns)
 dados1 = dados1[colunas1]
 dados2 = dados2[colunas]
 index = 0
@@ -246,7 +246,21 @@ train_mean = dados2.mean(axis=0)
 train_std = dados2.std(axis=0)
 dados2 = (dados2 - train_mean) / train_std
 
-
+# TimeStep(step_type=<tf.Tensor: shape=(1,), dtype=int32, numpy=array([0])>, 
+#          reward=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([0.], dtype=float32)>, 
+#          discount=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([1.], dtype=float32)>, 
+#          observation=<tf.Tensor: shape=(1, 1, 12), dtype=float64, numpy=
+#             array([[[-1.65378229, -0.78115943,  1.95991526,  3.90216124,
+#                      -2.24926787, -0.30065789, -0.123256  , -0.12977975,
+#                      -1.17510707,  3.2253985 , -3.00712777, -4.63082316]]])>)
+# TimeStep(step_type=<tf.Tensor: shape=(1,), dtype=int32, numpy=array([0])>, 
+#          reward=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([0.], dtype=float32)>,
+#          discount=<tf.Tensor: shape=(1,), dtype=float32, numpy=array([1.], dtype=float32)>,
+#          observation=<tf.Tensor: shape=(1, 1, 12), dtype=float32, numpy=
+# array([[[ 1.7421    , -0.40395573,  0.09719368,  1.1723692 ,
+#          -0.04748146, -0.02730422, -0.05186171,  0.08229385,
+#           0.10433018,  0.23802382,  0.5634408 , -0.02238419]]],
+#       dtype=float32)>)
 import random
 stop = -500
 gain = 500
@@ -257,10 +271,10 @@ for i in range(len(dados1)):
     compra,venda,neg,ficha,comprado,vendido,recompensa= trader.agente(dados1.values[i],action,stop,gain,0)
     # print('estado: ',dados2.values[i])
     observations = tf.constant([[dados2.values[i]]])
-    # time_step = ts.restart(observations,1)
-    # action2 = saved_policy.action(time_step)
-    time_step = ts.transition(observations,1)
-    action2 = agent.policy.action(time_step)
+    time_step = ts.restart(observations,1)
+    action2 = saved_policy.action(time_step)
+    # time_step = ts.transition(observations,1)
+    # action2 = agent.policy.action(time_step)
     action = action2.action.numpy()[0]
     
     print('------------------')
