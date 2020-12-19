@@ -105,8 +105,8 @@ class CardGameEnv(py_environment.PyEnvironment):
                 'Momentum', 'Force']
     
     colunas1 = ['Hora', 'open', 'high', 'low', 'close']
-    dados1 = pd.DataFrame(data=base[-50000:-1].values,columns=base.columns)      
-    dados2 = pd.DataFrame(data=base[-50000:-1].values,columns=base.columns)
+    dados1 = pd.DataFrame(data=base[-150000:-100000].values,columns=base.columns)      
+    dados2 = pd.DataFrame(data=base[-150000:-100000].values,columns=base.columns)
     dados1 = dados1[colunas1]
     dados2 = dados2[colunas]
     index = 0

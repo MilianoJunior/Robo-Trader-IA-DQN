@@ -50,7 +50,7 @@ try:
     #configuracoes iniciais - Hiperparametros
     tf.compat.v1.enable_v2_behavior()
     
-    num_iterations = 15000# @param {type:"integer"}
+    num_iterations = 25000# @param {type:"integer"}
     
     # variavel que faz coleta de dados
     initial_collect_steps = 50000  # @param {type:"integer"} 
@@ -59,9 +59,9 @@ try:
     # memoria de dados
     replay_buffer_capacity = 100000  # @param {type:"integer"}
     
-    fc_layer_params = (700,)
+    fc_layer_params = (256,256)
     
-    batch_size = 64  # @param {type:"integer"}
+    batch_size = 256  # @param {type:"integer"}
     learning_rate = 1e-3  # @param {type:"number"}
     gamma = 0.99
     log_interval = 200  # @param {type:"integer"}
@@ -222,7 +222,23 @@ try:
     saver.save('policy3')
     
     saved_policy = tf.compat.v2.saved_model.load('policy3')
+    colunas = ['Hora','dif', 'retacao +','retracao -', 'RSI',
+                 'M22M44', 'M22M66', 'M66M44', 'ADX', 'ATR',
+                'Momentum', 'Force']
     
+    colunas1 = ['Hora', 'open', 'high', 'low', 'close']
+    dados1 = pd.DataFrame(data=base[-150000:-100000].values,columns=base.columns)      
+    dados2 = pd.DataFrame(data=base[-150000:-100000].values,columns=base.columns)
+    dados1 = dados1[colunas1]
+    dados2 = dados2[colunas]
+    index = 0
+    for i in dados2.values:
+        base1 = i[0].split(':')
+        dados2.at[index, 'Hora'] = float(base1[0])*100 + float(base1[1])
+        index += 1
+    train_mean = dados2.mean(axis=0)
+    train_std = dados2.std(axis=0)
+    dados2 = (dados2 - train_mean) / train_std
     
     
     from Trade import Trade
