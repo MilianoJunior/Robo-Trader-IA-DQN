@@ -32,6 +32,8 @@ from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.trajectories import trajectory
 from tf_agents.utils import common
 
+# 1709.0
+# 3390.0
 
 from CardTrader import CardGameEnv
 try:
@@ -39,10 +41,10 @@ try:
   with tf.device('/device:GPU:0'):
     " 1 passo: importar os dados"
     try:
-        with open('M3.csv', 'rb') as f:
+        with open('M4.csv', 'rb') as f:
             result = chardet.detect(f.read())  # or readline if the file is large
         
-        base = pd.read_csv('M3.csv', encoding=result['encoding'])
+        base = pd.read_csv('M4.csv', encoding=result['encoding'])
         
     except:
         print('Erro, é preciso fazer o download dos dados OHLC em csv')
@@ -50,14 +52,14 @@ try:
     #configuracoes iniciais - Hiperparametros
     tf.compat.v1.enable_v2_behavior()
     
-    num_iterations = 25000# @param {type:"integer"}
+    num_iterations = 500000# @param {type:"integer"}
     
     # variavel que faz coleta de dados
-    initial_collect_steps = 50000  # @param {type:"integer"} 
+    initial_collect_steps = 200000  # @param {type:"integer"} 
     # faz interações aleatorias para explorar
     collect_steps_per_iteration = 1  # @param {type:"integer"}
     # memoria de dados
-    replay_buffer_capacity = 100000  # @param {type:"integer"}
+    replay_buffer_capacity = 1000000  # @param {type:"integer"}
     
     fc_layer_params = (256,256)
     
@@ -67,12 +69,12 @@ try:
     log_interval = 200  # @param {type:"integer"}
     
     num_atoms = 51  # @param {type:"integer"}
-    min_q_value = -1000  # @param {type:"integer"}
-    max_q_value = 1000  # @param {type:"integer"}
+    min_q_value = -100  # @param {type:"integer"}
+    max_q_value = 100  # @param {type:"integer"}
     n_step_update = 2  # @param {type:"integer"}
     
-    num_eval_episodes = 1  # @param {type:"integer"}
-    eval_interval = 100  # @param {type:"integer"}
+    num_eval_episodes = 2  # @param {type:"integer"}
+    eval_interval = 1000  # @param {type:"integer"}
     
     #Meio ambiente
     train_py_env = CardGameEnv(base,num_iterations)
@@ -220,15 +222,16 @@ try:
     my_policy = agent.collect_policy
     saver = policy_saver.PolicySaver(my_policy, batch_size=None)
     saver.save('policy3')
-    
+    import numpy as np
     saved_policy = tf.compat.v2.saved_model.load('policy3')
     colunas = ['Hora','dif', 'retacao +','retracao -', 'RSI',
                  'M22M44', 'M22M66', 'M66M44', 'ADX', 'ATR',
-                'Momentum', 'Force']
+                'Momentum', 'Force', 'VOL', 'CCI', 'Bears', 'Bulls', 'Stock1',
+                'Stock2', 'Wilians', 'Std', 'MFI', 'band1', 'band2','band3']
     
-    colunas1 = ['Hora', 'open', 'high', 'low', 'close']
-    dados1 = pd.DataFrame(data=base[-150000:-100000].values,columns=base.columns)      
-    dados2 = pd.DataFrame(data=base[-150000:-100000].values,columns=base.columns)
+    colunas1 = ['Hora', 'open', 'high', 'low', 'close','Std']
+    dados1 = pd.DataFrame(data=base[-914:-370].values,columns=base.columns)      
+    dados2 = pd.DataFrame(data=base[-914:-370].values,columns=base.columns)
     dados1 = dados1[colunas1]
     dados2 = dados2[colunas]
     index = 0
@@ -236,8 +239,20 @@ try:
         base1 = i[0].split(':')
         dados2.at[index, 'Hora'] = float(base1[0])*100 + float(base1[1])
         index += 1
-    train_mean = dados2.mean(axis=0)
-    train_std = dados2.std(axis=0)
+    # train_mean = dados2.mean(axis=0)
+    # train_std = dados2.std(axis=0)
+    train_mean = np.array([ 1.33793200e+03, -1.88003760e-02,  2.28691574e+01,  2.12422248e+01,
+        5.03584330e+01,  2.91188164e+00,  5.82291246e+00, -2.91102462e+00,
+        3.01221810e+01,  8.34974547e+01,  1.00003686e+02, -1.06897873e+03,
+        6.47077044e+03,  2.37574951e-01, -3.97979894e+01,  4.25147569e+01,
+        5.03948285e+01,  5.03950239e+01, -4.95499296e+01,  9.00340577e+01,
+        4.96373217e+01,  1.03066813e+05,  1.03246881e+05,  1.02886744e+05])
+    train_std = np.array([2.61870414e+02, 5.33931614e+01, 2.05532357e+01, 1.99331333e+01,
+       1.23527957e+01, 8.51901293e+01, 1.46821124e+02, 6.53311300e+01,
+       1.18854135e+01, 3.04180846e+01, 2.36491257e-01, 2.00994580e+05,
+       4.64809354e+03, 1.07799520e+02, 1.05157367e+02, 1.02117350e+02,
+       2.40411806e+01, 2.22333844e+01, 2.83496587e+01, 7.57608266e+01,
+       1.77987175e+01, 6.27292393e+03, 6.26327234e+03, 6.28621400e+03])
     dados2 = (dados2 - train_mean) / train_std
     
     
@@ -251,9 +266,10 @@ try:
     gain = 500
     trader.reset()
     action = 0
+    A =[0,0]
     for i in range(len(dados1)):
         
-        compra,venda,neg,ficha,comprado,vendido,recompensa= trader.agente(dados1.values[i],action,stop,gain,0)
+        Std = dados1.values[i][5]
         # print('estado: ',dados2.values[i])
         observations = tf.constant([[dados2.values[i]]])
         time_step = ts.restart(observations,1)
@@ -261,14 +277,19 @@ try:
         # time_step = ts.transition(observations,1)
         # action2 = agent.policy.action(time_step)
         action = action2.action.numpy()[0]
+        if Std < 100 and metal == False:
+            action = 0
+        compra,venda,neg,ficha,comprado,vendido,recompensa= trader.agente(dados1.values[i],A[i],stop,gain,0)
+        if comprado or vendido:
+            metal = True
+        A.append(action)
+        # print(i,'------------------')
+        # print('acao: ',action)
+        # print('comprado: ',comprado)
+        # print('vendido: ',vendido)
+        # print('recompensa: ',recompensa)
         
-        print(i,'------------------')
-        print('acao: ',action)
-        print('comprado: ',comprado)
-        print('vendido: ',vendido)
-        print('recompensa: ',recompensa)
-        
-        print('recompensa: ',time_step.reward.numpy(),' action: ',action2.action.numpy()[0])
+        # print('recompensa: ',time_step.reward.numpy(),' action: ',action2.action.numpy()[0])
     
     print(sum(neg.ganhofinal))
 except RuntimeError as e:
